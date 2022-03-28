@@ -1,116 +1,47 @@
 package main
 
 import (
+	"TestBook/api/author"
+	"TestBook/api/book"
+	"TestBook/api/genre"
 	"TestBook/models/modelsjson"
-	"TestBook/models/modelssql"
 	"TestBook/sql"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 )
 
-//func SetBook(){
-//	Db_Connect, err := sql.Connectdb()
-//
-//			if err != nil {
-//				panic(err)
-//			}
-//			Db_Connect.AutoMigrate(&modelssql.Books{})
-//}
-//
-//func HandlerSetBook(c *gin.Context){
-//	SetBook()
-//}
-
-//func SetGenre(){
-//	Db_Connect, err := sql.Connectdb()
-//
-//		if err != nil {
-//			panic(err)
-//		}
-//		Db_Connect.AutoMigrate(&modelssql.Zhanrs{})
-//}
-//
-//func HandlerSetGenre(c *gin.Context){
-//	SetGenre()
-//}
-
-func SetAuthor(request_SetAuthor []modelsjson.AuthorsBook) string {
-	result := ""
-	Db_Connect, err := sql.Connectdb()
-
-	if err != nil {
-		fmt.Println(err)
-		result = "Ошибка подключения к БД."
-		return result
-	}
-
-	for _, jsonAuthor := range request_SetAuthor {
-		modelAuthorsBook := modelssql.AuthorsBook{}
-		Db_Connect.Model(&modelAuthorsBook).Where("id = ?", jsonAuthor.Id).Find(&modelAuthorsBook)
-
-		if modelAuthorsBook.Id == 0 {
-			//create
-			modelAuthorsBook.Name = jsonAuthor.Name
-			modelAuthorsBook.Age = jsonAuthor.Age
-			modelAuthorsBook.Website = jsonAuthor.Website
-			modelAuthorsBook.Email = jsonAuthor.Email
-			Db_Connect.Model(modelAuthorsBook).Create(&modelAuthorsBook)
-			fmt.Println("create" + strconv.Itoa(jsonAuthor.Id))
-		} else {
-			//update
-			Db_Connect.Model(&modelAuthorsBook).Where("id = ?", jsonAuthor.Id).
-				Updates(map[string]interface{}{
-					"name":    jsonAuthor.Name,
-					"age":     jsonAuthor.Age,
-					"website": jsonAuthor.Website,
-					"email":   jsonAuthor.Email})
-			fmt.Println("update " + strconv.Itoa(jsonAuthor.Id))
-		}
-	}
-	return result
-}
-
-func HandlerSetAuthor(c *gin.Context) {
-	bodyBytes, _ := ioutil.ReadAll(c.Request.Body)                        //читаем тело
-	request_SetAuthor := []modelsjson.AuthorsBook{}                       //присваиваем переменной структуру json "SetAuthor"
-	if err := json.Unmarshal(bodyBytes, &request_SetAuthor); err == nil { //запись из тела body в структуру
-		result := SetAuthor(request_SetAuthor)
-		c.JSON(http.StatusOK, result)
-	}
-}
+var Db_Connect *gorm.DB
 
 func main() {
 
+	db, err := sql.Connectdb()
+	Db_Connect = db
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("ошибка подключения к БД")
+		panic(err)
+	}
 	handler := gin.New()
 	handler.Use(gin.Logger(), gin.Recovery(), Logger())
 	handler.POST("/setAuthor/", HandlerSetAuthor)
-	//handler.GET("/setGenre/",HandlerSetGenre)
-	//handler.GET("/setBook/",HandlerSetBook)
-	//handler.POST("/setAuthor/",HandlerSetAuthor)
-	//handler.POST("/setGenre/",HandlerSetGenre)
-	//handler.POST("/setBook/",HandlerSetBook)
-	//handler.DELETE("/deleteAuthor/",HandlerDeleteAuthor)
-	//handler.DELETE("/deleteGenre /",HandlerDeleteGenre)
-	//handler.DELETE("/deleteBook /",HandlerDeleteBook)
-	//handler.DELETE("/deleteAuthor/",HandlerDeleteAuthor)
-	//handler.DELETE("/deleteGenre/",HandlerDeleteGenre)
-	//handler.DELETE("/deleteBook/",HandlerDeleteBook)
-	//handler.GET("/viewAuthor/",HandlerViewAuthor)
-	//handler.GET("/viewGenre/",HandlerViewGenre)
-	//handler.GET("/viewBook/",HandlerViewBook)
-	//handler.GET("/viewAuthor/",HandlerViewAuthor)
-	//handler.GET("/viewGenre/",HandlerViewGenre)
-	//handler.GET("/viewBook/",HandlerViewBook)
+	handler.POST("/setGenre/", HandlerSetGenre)
+	handler.POST("/setBook/", HandlerSetBook)
+	handler.DELETE("/deleteAuthor/", HandlerDeleteAuthor)
+	handler.DELETE("/deleteGenre/", HandlerDeleteGenre)
+	handler.DELETE("/deleteBook/", HandlerDeleteBook)
+	handler.GET("/viewAuthor/", HandlerViewAuthor)
+	handler.GET("/viewGenre/", HandlerViewGenre)
+	handler.GET("/viewBook/", HandlerViewBook)
 
 	///////////////////НАСТРОЙКА СЕРВЕРА//////////////////////////////////////
 	s := &http.Server{
@@ -130,6 +61,69 @@ func main() {
 
 	graceful(s, 5*time.Second)
 
+}
+
+func HandlerSetAuthor(c *gin.Context) {
+	bodyBytes, _ := ioutil.ReadAll(c.Request.Body)                        //читаем тело
+	request_SetAuthor := []modelsjson.AuthorsBook{}                       //присваиваем переменной структуру json "SetAuthor"
+	if err := json.Unmarshal(bodyBytes, &request_SetAuthor); err == nil { //запись из тела body в структуру
+		result := author.SetAuthor(Db_Connect, request_SetAuthor)
+		c.JSON(http.StatusOK, result)
+	}
+}
+
+func HandlerSetGenre(c *gin.Context) {
+	bodyBytes, _ := ioutil.ReadAll(c.Request.Body)
+	request_SetGenre := []modelsjson.Zhanrs{}
+	if err := json.Unmarshal(bodyBytes, &request_SetGenre); err == nil {
+		result := genre.SetGenre(Db_Connect, request_SetGenre)
+		c.JSON(http.StatusOK, result)
+	}
+}
+
+func HandlerSetBook(c *gin.Context) {
+	bodyBytes, _ := ioutil.ReadAll(c.Request.Body)
+	request_SetBook := []modelsjson.Books{}
+	if err := json.Unmarshal(bodyBytes, &request_SetBook); err == nil {
+		result := book.SetBook(Db_Connect, request_SetBook)
+		c.JSON(http.StatusOK, result)
+	}
+}
+
+func HandlerDeleteAuthor(c *gin.Context) {
+	id := c.Query("id")
+	result := author.DeleteAuthor(Db_Connect, id)
+	c.JSON(http.StatusOK, result)
+}
+
+func HandlerDeleteGenre(c *gin.Context) {
+	id := c.Query("id")
+	result := genre.DeleteGenre(Db_Connect, id)
+	c.JSON(http.StatusOK, result)
+}
+
+func HandlerDeleteBook(c *gin.Context) {
+	id := c.Query("id")
+	result := book.DeleteBook(Db_Connect, id)
+	c.JSON(http.StatusOK, result)
+}
+
+func HandlerViewGenre(c *gin.Context) {
+	name := c.Query("name")
+	result := genre.ViewGenre(Db_Connect, name)
+	c.JSON(http.StatusOK, result)
+}
+
+func HandlerViewAuthor(c *gin.Context) {
+	id := c.Query("id")
+	result := author.ViewAuthor(Db_Connect, id)
+	c.JSON(http.StatusOK, result)
+}
+
+func HandlerViewBook(c *gin.Context) {
+	id := c.Query("id")
+	result := book.ViewBook(Db_Connect, id)
+	c.JSON(http.StatusOK, result)
 }
 
 //логирование подключений к серверу http
