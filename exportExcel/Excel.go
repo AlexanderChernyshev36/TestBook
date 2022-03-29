@@ -19,91 +19,10 @@ func ViewQuerySaveBook(Db_Connect *gorm.DB, request_SaveBook modelsjson.QuerySav
 		if request_SaveBook.NameList1 == "" {
 			return "Добавьте название к NameList_1"
 		}
-		sqlZhanrs := []modelssql.Zhanrs{}
-		Db_Connect.Find(&sqlZhanrs)
-
-		nameSheet_1 := request_SaveBook.NameList1
-		f.SetSheetName("Sheet1", nameSheet_1)
-
-		f.SetCellValue(nameSheet_1, "A1", "id")
-		f.SetCellValue(nameSheet_1, "B1", "Наименование")
-
-		if err := f.SetCellRichText(nameSheet_1, "B1", []excelize.RichTextRun{
-			{
-				Text: "Наименование",
-				Font: &excelize.Font{
-					Bold: true,
-				},
-			},
-		}); err != nil {
-			fmt.Println(err)
-			return "Не удалось отформатировать текст"
-
+		err := printList_1(Db_Connect, f, request_SaveBook)
+		if err != "" {
+			return err
 		}
-
-		if err := f.SetCellRichText(nameSheet_1, "A1", []excelize.RichTextRun{
-			{
-				Text: "id",
-				Font: &excelize.Font{
-					Bold: true,
-				},
-			},
-		}); err != nil {
-			fmt.Println(err)
-			return "Не удалось отформатировать текст"
-		}
-
-		StyleBorderLeft, _ := f.NewStyle(&excelize.Style{
-			Alignment: &excelize.Alignment{
-				Horizontal: "left",
-			},
-			Border: []excelize.Border{
-				{Type: "left", Color: "#000000", Style: 1},
-				{Type: "top", Color: "#000000", Style: 1},
-				{Type: "bottom", Color: "#000000", Style: 1},
-				{Type: "right", Color: "#000000", Style: 1},
-			},
-		})
-
-		StyleBorderCenter, _ := f.NewStyle(&excelize.Style{
-			Alignment: &excelize.Alignment{
-				Horizontal: "center",
-			},
-			Border: []excelize.Border{
-				{Type: "left", Color: "#000000", Style: 1},
-				{Type: "top", Color: "#000000", Style: 1},
-				{Type: "bottom", Color: "#000000", Style: 1},
-				{Type: "right", Color: "#000000", Style: 1},
-			},
-		})
-
-		StyleBorderRight, _ := f.NewStyle(&excelize.Style{
-			Alignment: &excelize.Alignment{
-				Horizontal: "right",
-			},
-			Border: []excelize.Border{
-				{Type: "left", Color: "#000000", Style: 1},
-				{Type: "top", Color: "#000000", Style: 1},
-				{Type: "bottom", Color: "#000000", Style: 1},
-				{Type: "right", Color: "#000000", Style: 1},
-			},
-		})
-
-		i := 2
-		for _, sqlZhanr := range sqlZhanrs {
-			f.SetCellValue(nameSheet_1, "A"+strconv.Itoa(i), sqlZhanr.Id)
-			f.SetCellValue(nameSheet_1, "B"+strconv.Itoa(i), sqlZhanr.NameZhanr)
-			i++
-		}
-		_ = f.SetCellStyle(nameSheet_1, "A1", "A"+strconv.Itoa(len(sqlZhanrs)+1), StyleBorderRight)
-		_ = f.SetCellStyle(nameSheet_1, "B1", "B"+strconv.Itoa(len(sqlZhanrs)+1), StyleBorderLeft)
-
-		_ = f.SetCellStyle(nameSheet_1, "A1", "A"+strconv.Itoa(1), StyleBorderCenter)
-		_ = f.SetCellStyle(nameSheet_1, "B1", "B"+strconv.Itoa(1), StyleBorderCenter)
-
-		f.SetColWidth(nameSheet_1, "A", "A", 20)
-		f.SetColWidth(nameSheet_1, "B", "B", 30)
-
 		countlist++
 	}
 
@@ -131,69 +50,75 @@ func ViewQuerySaveBook(Db_Connect *gorm.DB, request_SaveBook modelsjson.QuerySav
 		f.MergeCell(nameSheet_2, "D1", "D2")
 		f.MergeCell(nameSheet_2, "E1", "E2")
 
-		if err := f.SetCellRichText(nameSheet_2, "A1", []excelize.RichTextRun{
-			{
-				Text: "id книги",
-				Font: &excelize.Font{
-					Bold: true,
-				},
-			},
-		}); err != nil {
-			fmt.Println(err)
-			return "Не удалось отформатировать текст"
-		}
+		headerList_2(nameSheet_2, f, "A1", "id книги")
+		headerList_2(nameSheet_2, f, "B1", "id автора")
+		headerList_2(nameSheet_2, f, "C1", "Наименование книги")
+		headerList_2(nameSheet_2, f, "D1", "Кол. Страниц")
+		headerList_2(nameSheet_2, f, "E1", "Жанр")
 
-		if err := f.SetCellRichText(nameSheet_2, "B1", []excelize.RichTextRun{
-			{
-				Text: "id автора",
-				Font: &excelize.Font{
-					Bold: true,
-				},
-			},
-		}); err != nil {
-			fmt.Println(err)
-			return "Не удалось отформатировать текст"
+		//if err := f.SetCellRichText(nameSheet_2, "A1", []excelize.RichTextRun{
+		//	{
+		//		Text: "id книги",
+		//		Font: &excelize.Font{
+		//			Bold: true,
+		//		},
+		//	},
+		//}); err != nil {
+		//	fmt.Println(err)
+		//	return "Не удалось отформатировать текст"
+		//}
 
-		}
+		//if err := f.SetCellRichText(nameSheet_2, "B1", []excelize.RichTextRun{
+		//	{
+		//		Text: "id автора",
+		//		Font: &excelize.Font{
+		//			Bold: true,
+		//		},
+		//	},
+		//}); err != nil {
+		//	fmt.Println(err)
+		//	return "Не удалось отформатировать текст"
+		//
+		//}
 
-		if err := f.SetCellRichText(nameSheet_2, "C1", []excelize.RichTextRun{
-			{
-				Text: "Наименование книги",
-				Font: &excelize.Font{
-					Bold: true,
-				},
-			},
-		}); err != nil {
-			fmt.Println(err)
-			return "Не удалось отформатировать текст"
+		//if err := f.SetCellRichText(nameSheet_2, "C1", []excelize.RichTextRun{
+		//	{
+		//		Text: "Наименование книги",
+		//		Font: &excelize.Font{
+		//			Bold: true,
+		//		},
+		//	},
+		//}); err != nil {
+		//	fmt.Println(err)
+		//	return "Не удалось отформатировать текст"
+		//
+		//}
 
-		}
-
-		if err := f.SetCellRichText(nameSheet_2, "D1", []excelize.RichTextRun{
-			{
-				Text: "Кол. Страниц",
-				Font: &excelize.Font{
-					Bold: true,
-				},
-			},
-		}); err != nil {
-			fmt.Println(err)
-			return "Не удалось отформатировать текст"
-
-		}
-
-		if err := f.SetCellRichText(nameSheet_2, "E1", []excelize.RichTextRun{
-			{
-				Text: "Жанр",
-				Font: &excelize.Font{
-					Bold: true,
-				},
-			},
-		}); err != nil {
-			fmt.Println(err)
-			return "Не удалось отформатировать текст"
-
-		}
+		//if err := f.SetCellRichText(nameSheet_2, "D1", []excelize.RichTextRun{
+		//	{
+		//		Text: "Кол. Страниц",
+		//		Font: &excelize.Font{
+		//			Bold: true,
+		//		},
+		//	},
+		//}); err != nil {
+		//	fmt.Println(err)
+		//	return "Не удалось отформатировать текст"
+		//
+		//}
+		//
+		//if err := f.SetCellRichText(nameSheet_2, "E1", []excelize.RichTextRun{
+		//	{
+		//		Text: "Жанр",
+		//		Font: &excelize.Font{
+		//			Bold: true,
+		//		},
+		//	},
+		//}); err != nil {
+		//	fmt.Println(err)
+		//	return "Не удалось отформатировать текст"
+		//
+		//}
 
 		StyleBorderLeft, _ := f.NewStyle(&excelize.Style{
 			Alignment: &excelize.Alignment{
@@ -256,5 +181,134 @@ func ViewQuerySaveBook(Db_Connect *gorm.DB, request_SaveBook modelsjson.QuerySav
 		countlist++
 	}
 
+	if request_SaveBook.PrintList2 {
+		if request_SaveBook.NameList2 == "" {
+			return "Добавьте название к NameList_2"
+		}
+
+		sqlAuthor := []modelssql.AuthorsBook{}
+		Db_Connect.Find(&sqlAuthor)
+
+		nameSheet_3 := request_SaveBook.NameList3
+
+		if countlist == 0 {
+			f.SetSheetName("Sheet1", nameSheet_3)
+		} else {
+			f.NewSheet(nameSheet_3)
+		}
+
+	}
+
+	if err := f.SaveAs("Book1.xlsx"); err != nil {
+		fmt.Println(err)
+	}
 	return "Все прошло успешно"
+}
+
+func printList_1(Db_Connect *gorm.DB, f *excelize.File, request_SaveBook modelsjson.QuerySaveBook) string {
+
+	sqlZhanrs := []modelssql.Zhanrs{}
+	Db_Connect.Find(&sqlZhanrs)
+
+	nameSheet_1 := request_SaveBook.NameList1
+	f.SetSheetName("Sheet1", nameSheet_1)
+
+	f.SetCellValue(nameSheet_1, "A1", "id")
+	f.SetCellValue(nameSheet_1, "B1", "Наименование")
+
+	if err := f.SetCellRichText(nameSheet_1, "B1", []excelize.RichTextRun{
+		{
+			Text: "Наименование",
+			Font: &excelize.Font{
+				Bold: true,
+			},
+		},
+	}); err != nil {
+		fmt.Println(err)
+		return "Не удалось отформатировать текст"
+
+	}
+
+	if err := f.SetCellRichText(nameSheet_1, "A1", []excelize.RichTextRun{
+		{
+			Text: "id",
+			Font: &excelize.Font{
+				Bold: true,
+			},
+		},
+	}); err != nil {
+		fmt.Println(err)
+		return "Не удалось отформатировать текст"
+	}
+
+	StyleBorderLeft, _ := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{
+			Horizontal: "left",
+		},
+		Border: []excelize.Border{
+			{Type: "left", Color: "#000000", Style: 1},
+			{Type: "top", Color: "#000000", Style: 1},
+			{Type: "bottom", Color: "#000000", Style: 1},
+			{Type: "right", Color: "#000000", Style: 1},
+		},
+	})
+
+	StyleBorderCenter, _ := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{
+			Horizontal: "center",
+		},
+		Border: []excelize.Border{
+			{Type: "left", Color: "#000000", Style: 1},
+			{Type: "top", Color: "#000000", Style: 1},
+			{Type: "bottom", Color: "#000000", Style: 1},
+			{Type: "right", Color: "#000000", Style: 1},
+		},
+	})
+
+	StyleBorderRight, _ := f.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{
+			Horizontal: "right",
+		},
+		Border: []excelize.Border{
+			{Type: "left", Color: "#000000", Style: 1},
+			{Type: "top", Color: "#000000", Style: 1},
+			{Type: "bottom", Color: "#000000", Style: 1},
+			{Type: "right", Color: "#000000", Style: 1},
+		},
+	})
+
+	i := 2
+	for _, sqlZhanr := range sqlZhanrs {
+		f.SetCellValue(nameSheet_1, "A"+strconv.Itoa(i), sqlZhanr.Id)
+		f.SetCellValue(nameSheet_1, "B"+strconv.Itoa(i), sqlZhanr.NameZhanr)
+		i++
+	}
+	_ = f.SetCellStyle(nameSheet_1, "A1", "A"+strconv.Itoa(len(sqlZhanrs)+1), StyleBorderRight)
+	_ = f.SetCellStyle(nameSheet_1, "B1", "B"+strconv.Itoa(len(sqlZhanrs)+1), StyleBorderLeft)
+
+	_ = f.SetCellStyle(nameSheet_1, "A1", "A"+strconv.Itoa(1), StyleBorderCenter)
+	_ = f.SetCellStyle(nameSheet_1, "B1", "B"+strconv.Itoa(1), StyleBorderCenter)
+
+	f.SetColWidth(nameSheet_1, "A", "A", 20)
+	f.SetColWidth(nameSheet_1, "B", "B", 30)
+
+	return ""
+
+}
+
+func headerList_2(nameSheet_2 string, f *excelize.File, numCol string, textCol string) string {
+
+	if err := f.SetCellRichText(nameSheet_2, numCol, []excelize.RichTextRun{
+		{
+			Text: textCol,
+			Font: &excelize.Font{
+				Bold: true,
+			},
+		},
+	}); err != nil {
+		fmt.Println(err)
+		return "Не удалось отформатировать текст"
+	}
+	return ""
+
 }
