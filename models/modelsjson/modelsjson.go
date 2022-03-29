@@ -1,5 +1,14 @@
 package modelsjson
 
+type QuerySaveBook struct {
+	NameList1  string `json:"name_list_1"`
+	NameList2  string `json:"name_list_2"`
+	NameList3  string `json:"name_list_3"`
+	PrintList1 bool   `json:"print_list_1"`
+	PrintList2 bool   `json:"print_list_2"`
+	PrintList3 bool   `json:"print_list_3"`
+}
+
 type ErrorStruct struct {
 	Code      int    `json:"code"`
 	TextError string `json:"text_error"`

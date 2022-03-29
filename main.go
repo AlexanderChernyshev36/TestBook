@@ -36,6 +36,7 @@ func main() {
 	handler.POST("/setAuthor/", HandlerSetAuthor)
 	handler.POST("/setGenre/", HandlerSetGenre)
 	handler.POST("/setBook/", HandlerSetBook)
+	handler.POST("/saveBook/", HandlerSaveBook)
 	handler.DELETE("/deleteAuthor/", HandlerDeleteAuthor)
 	handler.DELETE("/deleteGenre/", HandlerDeleteGenre)
 	handler.DELETE("/deleteBook/", HandlerDeleteBook)
@@ -86,6 +87,15 @@ func HandlerSetBook(c *gin.Context) {
 	request_SetBook := []modelsjson.Books{}
 	if err := json.Unmarshal(bodyBytes, &request_SetBook); err == nil {
 		result := book.SetBook(Db_Connect, request_SetBook)
+		c.JSON(http.StatusOK, result)
+	}
+}
+
+func HandlerSaveBook(c *gin.Context) {
+	bodyBytes, _ := ioutil.ReadAll(c.Request.Body)
+	request_SaveBook := modelsjson.QuerySaveBook{}
+	if err := json.Unmarshal(bodyBytes, &request_SaveBook); err == nil {
+		result := genre.ViewQuerySaveBook(Db_Connect, request_SaveBook)
 		c.JSON(http.StatusOK, result)
 	}
 }
