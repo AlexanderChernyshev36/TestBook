@@ -4,6 +4,7 @@ import (
 	"TestBook/api/author"
 	"TestBook/api/book"
 	"TestBook/api/genre"
+	"TestBook/exportExcel"
 	"TestBook/models/modelsjson"
 	"TestBook/sql"
 	"context"
@@ -37,6 +38,7 @@ func main() {
 	handler.POST("/setGenre/", HandlerSetGenre)
 	handler.POST("/setBook/", HandlerSetBook)
 	handler.POST("/saveBook/", HandlerSaveBook)
+	handler.POST("/saveBookExcel/", HandlerSaveBook)
 	handler.DELETE("/deleteAuthor/", HandlerDeleteAuthor)
 	handler.DELETE("/deleteGenre/", HandlerDeleteGenre)
 	handler.DELETE("/deleteBook/", HandlerDeleteBook)
@@ -95,7 +97,7 @@ func HandlerSaveBook(c *gin.Context) {
 	bodyBytes, _ := ioutil.ReadAll(c.Request.Body)
 	request_SaveBook := modelsjson.QuerySaveBook{}
 	if err := json.Unmarshal(bodyBytes, &request_SaveBook); err == nil {
-		result := genre.ViewQuerySaveBook(Db_Connect, request_SaveBook)
+		result := exportExcel.ViewQuerySaveBook(Db_Connect, request_SaveBook)
 		c.JSON(http.StatusOK, result)
 	}
 }
